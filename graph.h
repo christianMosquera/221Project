@@ -7,7 +7,7 @@
 #include <cmath>
 #include <iostream>
 #include <queue>
-#include <vector>
+
 
 class Graph {
 private:
@@ -15,34 +15,66 @@ private:
     
     struct Vertex {
         size_t id;
-        std::list<size_t> edges;
-        Vertex () : id(), edges() {}
-        Vertex (size_t id) : id(id), edges() {}
-        struct MyHash {
-            size_t operator() (const Vertex& v) const { return v.id; }
-        };
+        std::list<Vertex*> adjVertices;
+        Vertex () : id(), adjVertices() {}
+        Vertex (size_t id) : id(id), adjVertices() {}
     };
 
-    std::unordered_set<Vertex> graph;
+    std::unordered_map<size_t, Vertex*> vertices;
+    std::unordered_map<size_t, std::unordered_map<size_t, double>> edges; // edges[][] edges.at().at()
+    
 
 public:
     // Task 1
-    Graph();
-    Graph(const Graph& other);
-    Graph& operator=(const Graph& other);
-    ~Graph();
+    Graph() : vertices(), edges() {}
+    Graph(const Graph& other) {}
+    Graph& operator=(const Graph& other) {
+        if (&other == this) {
+            return *this;
+        }
 
-    size_t vertex_count() const { return graph.size(); }
-    size_t edge_count() const {}
+        // make deep copy
+    }
 
-    bool contains_vertex(size_t id) const {}
-    bool contains_edge(size_t src, size_t dest) const;
-    double cost(size_t src, size_t dest) const;
+    ~Graph() {}
+
+    size_t vertex_count() const { return vertices.size(); }
+    size_t edge_count() const { return edges.size(); }
+
+    bool contains_vertex(size_t id) const { return vertices.find(id) != vertices.end(); }
+    bool contains_edge(size_t src, size_t dest) const {}
+    double cost(size_t src, size_t dest) const { return edges.at(src).at(dest); } // access edges through src and dest and return value
 
     bool add_vertex(size_t id) {
 
+        // if it already exists return false
+        if (vertices.find(id) == vertices.end()) {
+            return false;
+        }
+
+        // insert using id and allocate a new Vertex
+        vertices.insert({id, new Vertex(id)});
+
+        return true;
+
     }
-    bool add_edge(size_t src, size_t dest, double weight=1);
+
+    bool add_edge(size_t src, size_t dest, double weight=1) {
+
+        // make sure both exist
+        if (vertices.find(src) == vertices.end() || vertices.find(dest) == vertices.end()) {
+            return false;
+        }
+
+        // updating edge map
+        edges[src][dest] = weight;
+
+        // updating vertices map
+        vertices.at(src)->adjVertices.push_back(vertices.at(dest));
+
+        return true;
+
+    }
     bool remove_vertex(size_t id);
     bool remove_edge(size_t src, size_t dest);
 

@@ -2,14 +2,15 @@
 #include <sstream>
 #include "graph.h"
 
-using std::cout, std::endl;
+using std::cout;
+using std::endl;
 
 int main() {
     std::cout << "make an empty digraph" << std::endl;
     Graph G;
 
     std::cout << "add vertices" << std::endl;
-    for (size_t n = 1; n <= 7; n++) {
+    for (size_t n = 1; n <= 9; n++) {
         G.add_vertex(n);
     }
 
@@ -26,6 +27,8 @@ int main() {
     G.add_edge(5,4,2);
     G.add_edge(5,6,1);
     G.add_edge(7,5,1);
+    G.add_edge(8,9,3);
+    G.add_edge(8,4,1);
 
     std::cout << "G has " << G.vertex_count() << " vertices" << std::endl;
     std::cout << "G has " << G.edge_count() << " edges" << std::endl;
@@ -46,7 +49,7 @@ int main() {
     G.dijkstra(2);
 
     std::cout << "print shortest paths" <<std::endl;
-    for (size_t n = 1; n <= 7; n++) {
+    for (size_t n = 1; n <= 9; n++) {
         std::cout << "shortest path from 2 to " << n << std::endl;
         std::cout << "  ";
         G.print_shortest_path(n);

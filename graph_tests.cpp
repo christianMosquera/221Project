@@ -57,5 +57,29 @@ int main() {
 
     // TODO(student): implement graph tests
 
+    Graph H;
+    H.add_vertex(1);
+    H.add_vertex(2);
+    H.add_edge(1,2);
+    H.add_edge(2,1);
+    
+    std::cout << H.contains_vertex(1) << std::endl;
+    std::cout << H.contains_vertex(2) << std::endl;
+    std::cout << H.vertex_count() << std::endl;
+    std::cout << H.contains_edge(1,2) << std::endl;
+    std::cout << H.contains_edge(2,1) << std::endl;
+    std::cout << H.edge_count() << std::endl;
+    
+    std::cout << H.remove_vertex(1) << std::endl;
+    std::cout << H.contains_vertex(1) << std::endl;
+    std::cout << H.contains_vertex(2) << std::endl;
+    std::cout << H.vertex_count() << std::endl;
+    std::cout << H.contains_edge(1,2) << std::endl;
+    std::cout << H.contains_edge(2,1) << std::endl;
+    std::cout << H.edge_count() << std::endl;
+    std::cout << H.remove_vertex(1) << std::endl;
+
+
+
     return 0;
 }

@@ -1,5 +1,5 @@
 CXX = g++
-CXXFLAGS = -std=c++17 -Wall -Wextra -Weffc++ -pedantic-errors -g
+CXXFLAGS = -std=c++17 -Wall -g
 
 objects = graph
 

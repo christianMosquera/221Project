@@ -21,8 +21,7 @@ private:
         double cost;
         bool known;
 
-        Vertex () : id(), adjVertices(), path(nullptr), cost(0), known(false) {}
-        Vertex (size_t id) : id(id), adjVertices(), path(nullptr), cost(0), known(false) {}
+        Vertex (size_t id) : id(id), adjVertices(), path(nullptr), cost(INFINITY), known(false) {}
 
     };
 
@@ -53,6 +52,13 @@ public:
             return *this;
         }
 
+        for (auto i = vertices.begin(); i != vertices.end(); i++) {
+            delete i->second;
+        }
+
+        vertices.clear();
+        edges.clear();
+
         // make deep copy
         // iteratate over vertices and deep copy
         for (auto i = other.vertices.begin(); i != other.vertices.end(); ++i)  {
@@ -69,7 +75,11 @@ public:
 
     }
 
-    ~Graph() {}
+    ~Graph() {
+        for (auto i = vertices.begin(); i != vertices.end(); i++) {
+            delete i->second;
+        }
+    }
 
     size_t vertex_count() const { return vertices.size(); }
     size_t edge_count() const {
@@ -86,23 +96,34 @@ public:
 
     }
 
-    bool contains_vertex(size_t id) const { return vertices.find(id) != vertices.end(); }
+    bool contains_vertex(size_t id) const { return vertices.count(id) == 1; }
     bool contains_edge(size_t src, size_t dest) const {
         try {
             edges.at(src).at(dest);
-            
         }
         catch(std::out_of_range& e) {
             return false;
         }
         return true;
     }
-    double cost(size_t src, size_t dest) const { return edges.at(src).at(dest); } // access edges through src and dest and return value // fix
+    double cost(size_t src, size_t dest) const { 
+
+        if (!contains_vertex(src) || !contains_vertex(dest)) {
+            return INFINITY;
+        }
+
+        else if (!contains_edge(src, dest)) {
+            return INFINITY;
+        }
+
+        return edges.at(src).at(dest); 
+
+    }
 
     bool add_vertex(size_t id) {
 
         // if it already exists return false
-        if (vertices.find(id) != vertices.end()) {
+        if (contains_vertex(id)) {
             return false;
         }
 
@@ -116,7 +137,7 @@ public:
     bool add_edge(size_t src, size_t dest, double weight=1) {
 
         // make sure both exist
-        if (vertices.find(src) == vertices.end() || vertices.find(dest) == vertices.end()) {
+        if (!contains_vertex(src) || !contains_vertex(dest)) {
             return false;
         }
 
@@ -135,13 +156,24 @@ public:
     }
     bool remove_vertex(size_t id) {
 
-        if (vertices.find(id) == vertices.end()) {
+        if (!contains_vertex(id)) {
             return false;
         }
-        // remove from edges first
+
         
 
-        // remove from vertices and delete object
+        for (auto pair : edges) {
+            if (contains_edge(pair.first, id)) {
+                edges.at(pair.first).erase(id);
+                vertices.at(pair.first)->adjVertices.remove(vertices.at(id));
+            }
+        }
+        
+        edges.erase(id);
+
+        Vertex* deleteVertex = vertices.at(id);
+        vertices.erase(id);
+        delete deleteVertex;
 
         return true;
 
@@ -149,15 +181,19 @@ public:
     bool remove_edge(size_t src, size_t dest) {
 
         // make sure both exist
-        if (vertices.find(src) == vertices.end() || vertices.find(dest) == vertices.end()) {
+        if (!contains_vertex(src) || !contains_vertex(dest)) {
+            return false;
+        }
+
+        if (!contains_edge(src, dest)) {
             return false;
         }
 
         // remove only edge
-        //auto map = edges.find(src);
+        edges.at(src).erase(dest);
 
         // remove from the src's list
-        //vertices.at(src)->adjVertices.remove
+        vertices.at(src)->adjVertices.remove(vertices.at(dest));
         
 
         return true;
@@ -166,112 +202,116 @@ public:
 
     // Task 2
     void prim(size_t source_id) {}
-    bool is_path(size_t id) const {}
+    bool is_path(size_t id) const { return false;}
     void print_path(size_t dest_id, std::ostream& os=std::cout) const {}
 
     // Task 3
     void dijkstra(size_t source_id) {
 
-        // if vertex does not exist
-        if (!contains_vertex(source_id)) {
-            return;
-        }
+        // // if vertex does not exist
+        // if (!contains_vertex(source_id)) {
+        //     return;
+        // }
 
-        Vertex* cheapest;
-        Vertex* current = vertices.at(source_id);
-        std::unordered_set<size_t> available;
+        // Vertex* cheapest;
+        // Vertex* current = vertices.at(source_id);
+        // std::unordered_set<size_t> available;
 
-        // set all costs to infinity
-        for (auto i = vertices.begin(); i != vertices.end(); i++) {
-            i->second->cost = INFINITY;
-        }
+        // // set all costs to infinity
+        // for (auto i = vertices.begin(); i != vertices.end(); i++) {
+        //     i->second->cost = INFINITY;
+        //     i->second->known = false;
+        //     i->second->path = nullptr;
+        // }
 
-        // set source cost to 0
-        current->cost = 0;
+        // // set source cost to 0
+        // current->cost = 0;
 
-        // encapsulate in another loop
-        for (auto i = vertices.begin(); i != vertices.end(); i++) {
-            if (!current) {
-                break;
-            }
-            cheapest = nullptr;
-            current->known = true;
+        // // encapsulate in another loop
+        // for (auto i = vertices.begin(); i != vertices.end(); i++) {
 
-            // loop over the current vertex adjacency list
-            for (Vertex* v : current->adjVertices) {
+        //     if (!current) {
+        //         break;
+        //     }
 
-                // add all edges to available set
-                available.insert(v->id);
+        //     cheapest = nullptr;
+        //     current->known = true;
 
-                // checks
-                if (v->known == true) {
-                    continue;
-                }
+        //     // loop over the current vertex adjacency list
+        //     for (Vertex* v : current->adjVertices) {
 
-                if (current->cost + edges.at(current->id).at(v->id) < v->cost) {
+        //         // add all edges to available set
+        //         available.insert(v->id);
+
+        //         // checks
+        //         if (v->known == true) {
+        //             continue;
+        //         }
+
+        //         if (current->cost + edges.at(current->id).at(v->id) < v->cost) {
                     
-                    // replaces the cost with the lower number
-                    v->cost = current->cost + edges.at(current->id).at(v->id);
+        //             // replaces the cost with the lower number
+        //             v->cost = current->cost + edges.at(current->id).at(v->id);
                     
-                    // updates the path
-                    v->path = current;
+        //             // updates the path
+        //             v->path = current;
 
-                }
+        //         }
 
-            }
+        //     }
 
-            // find cheapest vertex for next iteration
-            for (auto j = available.begin(); j != available.end(); j++) {
+        //     // find cheapest vertex for next iteration
+        //     for (auto j = available.begin(); j != available.end(); j++) {
                 
-                if (cheapest == nullptr && vertices.at(*j)->known == true) {
-                    continue;
-                }
-                // find cheapest vertex
-                else if (cheapest == nullptr && vertices.at(*j)->known == false) {
-                    cheapest = vertices.at(*j);
-                }
-                else if (vertices.at(*j)->cost < cheapest->cost && vertices.at(*j)->known == false) {
-                    cheapest = vertices.at(*j);
-                }
+        //         if (cheapest == nullptr && vertices.at(*j)->known == true) {
+        //             continue;
+        //         }
+        //         // find cheapest vertex
+        //         else if (cheapest == nullptr && vertices.at(*j)->known == false) {
+        //             cheapest = vertices.at(*j);
+        //         }
+        //         else if (vertices.at(*j)->cost < cheapest->cost && vertices.at(*j)->known == false) {
+        //             cheapest = vertices.at(*j);
+        //         }
 
-            }
+        //     }
 
-            current = cheapest;
+        //     current = cheapest;
             
-        }
+        // }
 
     }
 
     double distance(size_t id) const {
-        if (!contains_vertex(id)) {
-            return INFINITY;
-        } 
-        return vertices.at(id)->cost; 
+        // if (!contains_vertex(id)) {
+        //     return INFINITY;
+        // } 
+        // return vertices.at(id)->cost; 
     }
     void print_shortest_path(size_t dest_id, std::ostream& os=std::cout) const {
-        if (!contains_vertex(dest_id)) {
-            return;
-        }
-        if (vertices.at(dest_id)->known == false) {
-            os << "<no path>" << std::endl;
-            return;
-        }
-        print_shortest_path_recursive(dest_id, os);
-        os << " distance: " << distance(dest_id) << std::endl;
+        // if (!contains_vertex(dest_id)) {
+        //     return;
+        // }
+        // if (vertices.at(dest_id)->known == false) {
+        //     os << "<no path>" << std::endl;
+        //     return;
+        // }
+        // print_shortest_path_recursive(dest_id, os);
+        // os << " distance: " << distance(dest_id) << std::endl;
     }
 
     void print_shortest_path_recursive(size_t id, std::ostream& os=std::cout) const {
         
-        Vertex* vertex = vertices.at(id);
+        // Vertex* vertex = vertices.at(id);
     
-        if (vertex->path == nullptr) {
-            os << vertex->id;
-        }
+        // if (vertex->path == nullptr) {
+        //     os << vertex->id;
+        // }
 
-        else {
-            print_shortest_path_recursive(vertex->path->id, os);
-            os << " --> " << vertex->id;
-        }
+        // else {
+        //     print_shortest_path_recursive(vertex->path->id, os);
+        //     os << " --> " << vertex->id;
+        // }
 
         
 
